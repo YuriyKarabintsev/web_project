@@ -65,6 +65,10 @@ def login():
                                form=form)
     return render_template('autorization.html', title='Авторизация', form=form, registration=registration)
 
+@app.route('/per_acc', methods=['GET'])
+def per_acc():
+    return render_template('per_acc.html')
+
 
 if __name__ == "__main__":
     db_session.global_init("db/users.sqlite")

@@ -13,7 +13,8 @@
         <header>
         <h1><a href="/">ITer</a></h1>
             {% if current_user.is_authenticated %}
-                <a class="navbar-brand" href="/logout">{{ current_user.name }} {{ current_user.surname }}</a>
+                <p class="alert">{{ current_user.name }} {{ current_user.surname }}</p>
+                <a href="/per_acc">Личный кабинет</a>
             {% endif %}
             </header>
         <main role="main" class="container">
