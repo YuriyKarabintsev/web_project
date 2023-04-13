@@ -135,10 +135,11 @@ def singupget():
 @app.route("/nev_posdt")
 def nev_posdt():
     db_sess = db_session.create_session()
-    news = News(title="Первая новость", content="Привет блог!", user_id=1)
-    db_sess.add ( news )
-    db_sess.commit ()
-    return '54'
+    if request.method == "POST":
+        news = News(title="Первая новость", content="Привет блог!", user_id=1)
+        db_sess.add(news)
+        db_sess.commit()
+    return redirect('/')
 
 
 
