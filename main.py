@@ -10,11 +10,13 @@ from data import db_session
 from flask_login import login_user, login_required, logout_user
 from flask import redirect
 from flask_login import LoginManager
-#from data.jobs import Jobs
-#from data import jobs_api
+import users_resource
+from flask_restful import Api
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+api = Api(app)
+api.add_resource(users_resource.UsersResource, '/api/users/<int:user_id>')
 
 login_manager = LoginManager()
 login_manager.init_app(app)
