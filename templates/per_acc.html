@@ -2,4 +2,21 @@
 
 {% block content %}
 
-<h3>Личный кабинет</h3>
+<nav class="navbar bg-body-tertiary">
+  <div class="container-fluid">
+    <h3>Личный кабинет</h3>
+  </div>
+  {% for b in blogs %}
+  <div class="col-md6 border rounded">
+    <h2>{{b.title}}</h2>
+    <div>
+        {{b.content}}
+    </div>
+    <div>
+        Автор - {{b.user.name}}, Дата написания - {{b.created_date}}
+    </div>
+  </div>
+{% endfor %}
+</nav>
+
+{% endblock %}

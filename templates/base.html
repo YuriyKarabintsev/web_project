@@ -13,8 +13,7 @@
         <header>
         <h1><a href="/">ITer</a></h1>
             {% if current_user.is_authenticated %}
-                <p class="alert">{{ current_user.name }} {{ current_user.surname }}</p>
-                <a href="/per_acc">Личный кабинет</a>
+                <p class="alert"><a href="/per_acc">{{ current_user.name }} {{ current_user.surname }}</a></p>
             {% endif %}
             </header>
         <main role="main" class="container">

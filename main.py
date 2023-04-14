@@ -12,6 +12,7 @@ from flask import redirect
 from flask_login import LoginManager
 import users_resource
 from flask_restful import Api
+from data.blogs import Blogs
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -69,9 +70,26 @@ def login():
 
 @app.route('/per_acc', methods=['GET'])
 def per_acc():
-    return render_template('per_acc.html')
+    db_sess = db_session.create_session()
+    blogs = db_sess.query(Blogs).all()
+    print(blogs, "ALL BLOGS")
+    return render_template('per_acc.html', title="Личный кабинет", blogs=blogs)
 
 
 if __name__ == "__main__":
     db_session.global_init("db/users.sqlite")
+    db_sess = db_session.create_session()
+    '''blog = Blogs()
+    blog.id = 1
+    blog.title = "Игра на C#"
+    blog.content = "Я создал игру-платформер на C#. Планирую выложить в Steam:)"
+    blog.user_id = 22
+    blog.type = "project"
+    db_sess.add(blog)
+    db_sess.commit()'''
+
+    blogs = db_sess.query(Blogs).all()
+    for blog in blogs:
+        print(blog.title, blog.user_id)
+
     app.run()
