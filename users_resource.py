@@ -18,4 +18,4 @@ class UsersResource(Resource):
         session = db_session.create_session()
         users = session.query(User).get(user_id)
         return jsonify({'user': users.to_dict(
-            only=("id", "name", "surname", "specialization", "email", "hashed_password", "modified_date"))})
+            only=("id", "surname", "name", "specialization", "email", "hashed_password", "modified_date"))})
