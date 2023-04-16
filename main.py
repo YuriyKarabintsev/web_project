@@ -7,12 +7,13 @@ from loginform import LoginForm
 from userform import UserForm
 from data.users import User
 from data import db_session
-from flask_login import login_user, login_required, logout_user
+from flask_login import login_user, login_required, logout_user, current_user
 from flask import redirect
 from flask_login import LoginManager
 import users_resource
-from flask_restful import Api
+from flask_restful import Api, abort
 from data.blogs import Blogs
+from blogsform import BlogsForm
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -75,21 +76,40 @@ def per_acc():
     print(blogs, "ALL BLOGS")
     return render_template('per_acc.html', title="Личный кабинет", blogs=blogs)
 
+@app.route('/add_blog',  methods=['GET', 'POST'])
+@login_required
+def add_news():
+    form = BlogsForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        blog = Blogs()
+        blog.title = form.title.data
+        blog.content = form.content.data
+        blog.user_id = form.is_private.data
+        blog.type = form.type.data
+        current_user.blogs.append(blog)
+        db_sess.merge(current_user)
+        db_sess.commit()
+        return redirect('/')
+    return render_template('add_blog.html', title='Добавление новости',
+                           form=form)
+
+@app.route('/blogs_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def blogs_delete(id):
+    db_sess = db_session.create_session()
+    blogs = db_sess.query(Blogs).filter(Blogs.id == id,
+                                      Blogs.user == current_user
+                                      ).first()
+    if blogs:
+        db_sess.delete(blogs)
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/')
+
 
 if __name__ == "__main__":
-    db_session.global_init("db/users.sqlite")
-    db_sess = db_session.create_session()
-    '''blog = Blogs()
-    blog.id = 1
-    blog.title = "Игра на C#"
-    blog.content = "Я создал игру-платформер на C#. Планирую выложить в Steam:)"
-    blog.user_id = 22
-    blog.type = "project"
-    db_sess.add(blog)
-    db_sess.commit()'''
-
-    blogs = db_sess.query(Blogs).all()
-    for blog in blogs:
-        print(blog.title, blog.user_id)
+    db_session.global_init("db/blogs.sqlite")
 
     app.run()
