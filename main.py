@@ -110,6 +110,6 @@ def blogs_delete(id):
 
 
 if __name__ == "__main__":
-    db_session.global_init("db/blogs.sqlite")
+    db_session.global_init("db/site_data.db")
 
     app.run()
