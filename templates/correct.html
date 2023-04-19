@@ -1,9 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Добавление записи</h1>
+<h1>Редактирование записи</h1>
 <form action="" method="post">
-    {{ form.hidden_tag() }}
     <p>
         {{ form.title.label }}<br>
         {{ form.title(class="form-control") }}<br>
@@ -40,7 +39,6 @@
             </p>
         {% endfor %}
     </p>
-    <p>
     <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
     {{message}}
 </form>

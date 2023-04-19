@@ -31,7 +31,8 @@ def load_user(user_id):
 @app.route("/")
 def index():
     db_sess = db_session.create_session()
-    return render_template("index.html", title="Main page")
+    blogs = db_sess.query(Blogs).all()
+    return render_template("index.html", title="Main page", blogs=blogs)
 
 
 @app.route("/registration", methods=["GET","POST"])
@@ -69,6 +70,12 @@ def login():
                                form=form)
     return render_template('autorization.html', title='Авторизация', form=form, registration=registration)
 
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect("/")
+
 @app.route('/per_acc', methods=['GET'])
 def per_acc():
     db_sess = db_session.create_session()
@@ -85,13 +92,48 @@ def add_news():
         blog = Blogs()
         blog.title = form.title.data
         blog.content = form.content.data
-        blog.user_id = form.is_private.data
+        blog.user_id = form.user_id.data
         blog.type = form.type.data
+        blog.likes = 0
         current_user.blogs.append(blog)
         db_sess.merge(current_user)
         db_sess.commit()
-        return redirect('/')
-    return render_template('add_blog.html', title='Добавление новости',
+        return redirect('/per_acc')
+    return render_template('add_blog.html', title='Добавление блога',
+                           form=form)
+
+@app.route('/correct/<int:id>',  methods=['GET', 'POST'])
+@login_required
+def correct(id):
+    form = BlogsForm()
+    if request.method == "GET":
+        db_sess = db_session.create_session()
+        blogs = db_sess.query(Blogs).filter(Blogs.id == id,
+                                          Blogs.user == current_user
+                                          ).first()
+        if blogs:
+            form.title.data = blogs.title
+            form.content.data = blogs.content
+            form.user_id.data = blogs.user_id
+            form.type.data = blogs.type
+        else:
+            abort(404)
+    print(form.validate_on_submit(), "состояние формы")
+    if form.validate_on_submit():
+        print("ОТПРАВЛЕНО")
+        db_sess = db_session.create_session()
+        blogs = db_sess.query(Blogs).filter(Blogs.id == id,
+                                          Blogs.user == current_user
+                                          ).first()
+        if blogs:
+            print("РЕДАКТИРОВАНИЕ")
+            blogs.title = form.title.data
+            blogs.content = form.content.data
+            db_sess.commit()
+            return redirect('/')
+        else:
+            abort(404)
+    return render_template('correct.html', title='Редактирование блога',
                            form=form)
 
 @app.route('/blogs_delete/<int:id>', methods=['GET', 'POST'])
@@ -106,10 +148,47 @@ def blogs_delete(id):
         db_sess.commit()
     else:
         abort(404)
-    return redirect('/')
+    return redirect('/per_acc')
+
+@app.route("/plus_like/<int:id>", methods=["GET", "POST"])
+@login_required
+def plus_like(id):
+    db_sess = db_session.create_session()
+    print(id, "ID OF BLOG")
+    blogs = db_sess.query(Blogs).filter(Blogs.id == id).first()
+    l = blogs.users_liked
+    print(current_user.id, blogs.user_id, l)
+    if current_user.id != blogs.user_id and str(current_user.id) not in l:
+        print("PLUS LIKES")
+        if not l:
+            l = str(current_user.id) + ","
+            blogs.users_liked = l
+        print(l, "THEY LIKE!")
+        blogs.likes += 1
+        db_sess.commit()
+    return redirect("/")
 
 
 if __name__ == "__main__":
-    db_session.global_init("db/site_data.db")
+    db_session.global_init("db/data.db")
+
+    '''blog = Blogs()
+    blog.id = 1
+    blog.title = "Автоматическая система по уходу за растениями"
+    blog.content = "Проект, осуществляющий полный уход за растениями: полив, подача удобрений, освещение, защита от " \
+                   "солнца, передача данных о состоянии окружающей среды в интернет. Проект разработан с помощью" \
+                   "плат Arduino Mega и Wemos."
+    blog.user_id = 1
+    blog.type = "project"
+    db_sess = db_session.create_session()
+    db_sess.add(blog)
+    db_sess.commit()'''
+    db_sess = db_session.create_session()
+    for blog in db_sess.query(Blogs):
+        print(blog.id, blog.content, blog.type, blog.likes)
+    b = db_sess.query(Blogs).filter(Blogs.id == 1).first()
+    b.users_liked = ""
+    db_sess.commit()
+
 
     app.run()

@@ -2,4 +2,19 @@
 
 {% block content %}
 
+{% for b in blogs %}
+<link rel="stylesheet" href="../static/css/types.css">
+<div class="{{ b.type }}">
+    <h2>{{b.title}}</h2>
+    <div>
+        {{b.content}}
+    </div>
+    <div>
+        Автор - {{b.user.name}}, Дата написания - {{b.created_date}}
+    </div>
+    <button><a href="/plus_like/{{ b.id }}">{{ b.likes }}</a><img src="../static/images/likes.png"/></button>
+  </div>
+
+{% endfor %}
+
 {% endblock %}

@@ -1,13 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-
+<link rel="stylesheet" href="../static/css/types.css">
 <nav class="navbar bg-body-tertiary">
   <div class="container-fluid">
     <h3>Личный кабинет</h3>
   </div>
+  <button class="btn btn-info"><a href="/add_blog">Добавить новую запись</a></button>
   {% for b in blogs %}
-  <div class="col-md6 border rounded">
+  <div class="{{ b.type }}">
     <h2>{{b.title}}</h2>
     <div>
         {{b.content}}
@@ -15,6 +16,9 @@
     <div>
         Автор - {{b.user.name}}, Дата написания - {{b.created_date}}
     </div>
+    <button class="btn btn-info"><a href="/correct/{{ b.id }}">Редактировать</a></button>
+    <button class="btn btn-warning"><a href="/blogs_delete/{{ b.id }}">Удалить</a></button>
+    <button>{{ b.likes }}<img src="../static/images/likes.png"/></button>
   </div>
 {% endfor %}
 </nav>

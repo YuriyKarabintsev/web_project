@@ -17,4 +17,6 @@ class Blogs(SqlAlchemyBase):
     user_id = sqlalchemy.Column(sqlalchemy.Integer,
                                 sqlalchemy.ForeignKey("users.id"))
     type = sqlalchemy.Column(sqlalchemy.String, default="note")
+    likes = sqlalchemy.Column(sqlalchemy.Integer)
+    users_liked = sqlalchemy.Column(sqlalchemy.String)
     user = orm.relationship('User')

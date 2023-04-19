@@ -14,6 +14,10 @@
         <h1><a href="/">ITer</a></h1>
             {% if current_user.is_authenticated %}
                 <p class="alert"><a href="/per_acc">{{ current_user.name }} {{ current_user.surname }}</a></p>
+                <p><a href="/logout">Выйти</a></p>
+            {% else %}
+                <p><a href="/login">Авторизоваться</a></p>
+                <p><a href="/registration">Зарегистрироваться</a></p>
             {% endif %}
             </header>
         <main role="main" class="container">

@@ -1,0 +1,9 @@
+.project {
+    background-color: #f0cdb1;
+    box-shadow: -4px 4px 4px #666666;
+    position: static;
+}
+.note {
+    background-color: #f7e8dc;
+    position: static;
+}
