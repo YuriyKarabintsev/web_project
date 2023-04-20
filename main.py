@@ -1,9 +1,9 @@
 import flask
 import flask_login
 from flask import Flask
-from flask import render_template, request, jsonify
+from flask import render_template, request, jsonify, flash, url_for
 from loginform import LoginForm
-#from jobsform import JobsForm
+import os
 from userform import UserForm
 from data.users import User
 from data import db_session
@@ -14,14 +14,26 @@ import users_resource
 from flask_restful import Api, abort
 from data.blogs import Blogs
 from blogsform import BlogsForm
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+UPLOAD_FOLDER = '/uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 api = Api(app)
 api.add_resource(users_resource.UsersResource, '/api/users/<int:user_id>')
+secure_filename('/uploads')
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    """ Функция проверки расширения файла """
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -79,13 +91,13 @@ def logout():
 @app.route('/per_acc', methods=['GET'])
 def per_acc():
     db_sess = db_session.create_session()
-    blogs = db_sess.query(Blogs).all()
+    blogs = db_sess.query(Blogs).filter(Blogs.user_id == current_user.id)
     print(blogs, "ALL BLOGS")
     return render_template('per_acc.html', title="Личный кабинет", blogs=blogs)
 
 @app.route('/add_blog',  methods=['GET', 'POST'])
 @login_required
-def add_news():
+def add_blogs():
     form = BlogsForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
@@ -119,7 +131,7 @@ def correct(id):
         else:
             abort(404)
     print(form.validate_on_submit(), "состояние формы")
-    if form.validate_on_submit():
+    if request.method == "POST":#form.validate_on_submit():
         print("ОТПРАВЛЕНО")
         db_sess = db_session.create_session()
         blogs = db_sess.query(Blogs).filter(Blogs.id == id,
@@ -133,6 +145,7 @@ def correct(id):
             return redirect('/')
         else:
             abort(404)
+    print("HERE IS THE END")
     return render_template('correct.html', title='Редактирование блога',
                            form=form)
 
@@ -157,38 +170,61 @@ def plus_like(id):
     print(id, "ID OF BLOG")
     blogs = db_sess.query(Blogs).filter(Blogs.id == id).first()
     l = blogs.users_liked
-    print(current_user.id, blogs.user_id, l)
+    print(current_user.id, blogs.user_id, "users like", l)
+    if l == None:
+        l = ""
     if current_user.id != blogs.user_id and str(current_user.id) not in l:
         print("PLUS LIKES")
         if not l:
             l = str(current_user.id) + ","
             blogs.users_liked = l
+            db_sess.commit()
         print(l, "THEY LIKE!")
         blogs.likes += 1
         db_sess.commit()
     return redirect("/")
 
+@app.route('/photo', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        # проверим, передается ли в запросе файл
+        if 'file' not in request.files:
+            # После перенаправления на страницу загрузки
+            # покажем сообщение пользователю
+            flash('Не могу прочитать файл')
+            return redirect(request.url)
+        file = request.files['file']
+        # Если файл не выбран, то браузер может
+        # отправить пустой файл без имени.
+        if file.filename == '':
+            flash('Нет выбранного файла')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            # безопасно извлекаем оригинальное имя файла
+            filename = secure_filename(file.filename)
+            # сохраняем файл
+            print(file, filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            # если все прошло успешно, то перенаправляем
+            # на функцию-представление `download_file`
+            # для скачивания файла
+            return redirect(url_for('download_file', name=filename))
+    return '''
+    <!doctype html>
+    <title>Загрузить новый файл</title>
+    <h1>Загрузить новый файл</h1>
+    <form method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <input type=submit value=Upload>
+    </form>
+    </html>
+    '''
+
 
 if __name__ == "__main__":
     db_session.global_init("db/data.db")
-
-    '''blog = Blogs()
-    blog.id = 1
-    blog.title = "Автоматическая система по уходу за растениями"
-    blog.content = "Проект, осуществляющий полный уход за растениями: полив, подача удобрений, освещение, защита от " \
-                   "солнца, передача данных о состоянии окружающей среды в интернет. Проект разработан с помощью" \
-                   "плат Arduino Mega и Wemos."
-    blog.user_id = 1
-    blog.type = "project"
-    db_sess = db_session.create_session()
-    db_sess.add(blog)
-    db_sess.commit()'''
     db_sess = db_session.create_session()
     for blog in db_sess.query(Blogs):
         print(blog.id, blog.content, blog.type, blog.likes)
-    b = db_sess.query(Blogs).filter(Blogs.id == 1).first()
-    b.users_liked = ""
-    db_sess.commit()
-
 
     app.run()
