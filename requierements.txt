@@ -1,0 +1,6 @@
+Flask
+flask_login
+flask_restful
+werkzeug
+sqlalchemy
+datetime
