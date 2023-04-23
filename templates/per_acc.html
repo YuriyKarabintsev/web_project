@@ -1,26 +1,47 @@
 {% extends "base.html" %}
-
 {% block content %}
 <link rel="stylesheet" href="../static/css/types.css">
-<nav class="navbar bg-body-tertiary">
-  <div class="container-fluid">
-    <h3>Личный кабинет</h3>
-  </div>
-  <button class="btn btn-info"><a href="/add_blog">Добавить новую запись</a></button>
-  {% for b in blogs %}
-  <div class="{{ b.type }}">
+<div class="container-fluid">
+  <h3>Личный кабинет</h3>
+</div>
+{% if current_user.id == iden %}
+    <div>
+        <button class="btn btn-info"><a href="/add_blog">Добавить новую запись</a></button>
+    </div>
+{% endif %}
+<br /><br />
+{% for b in blogs %}
+<div class="{{ b.type }}">
     <h2>{{b.title}}</h2>
+    {% if b.type == "Note" %}
+        &nbsp;&nbsp;&nbsp;<img src="../static/images/note.png" />
+    {% endif %}
+    {% if b.type == "Question" %}
+        &nbsp;&nbsp;&nbsp;<img src="../static/images/question.png" />
+    {% endif %}
+    {% if b.type == "Project" %}
+        &nbsp;&nbsp;&nbsp;<img src="../static/images/project.jpg" />
+    {% endif %}
+    {% if b.type == "Vacancy" %}
+        &nbsp;&nbsp;&nbsp;<img src="../static/images/vacancy.png" />
+    {% endif %}
     <div>
         {{b.content}}
     </div>
     <div>
-        Автор - {{b.user.name}}, Дата написания - {{b.created_date}}
+        Автор - {{b.user.name}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>{{b.created_date}}</em>
     </div>
-    <button class="btn btn-info"><a href="/correct/{{ b.id }}">Редактировать</a></button>
-    <button class="btn btn-warning"><a href="/blogs_delete/{{ b.id }}">Удалить</a></button>
-    <button>{{ b.likes }}<img src="../static/images/likes.png"/></button>
-  </div>
+    {% if b.img_name %}
+        <img src="../users_images/{{ current_user.id }}/{{ b.img_name }}" alt="../users_images/{{ current_user.id }}/{{ b.img_name }}"/>
+    {% endif %}
+    <br />
+    {% if current_user.id == iden %}
+        <button class="btn btn-info"><a href="/correct/{{ b.id }}">Редактировать</a></button>
+        <button class="btn btn-warning"><a href="/blogs_delete/{{ b.id }}">Удалить</a></button>
+        <button>{{ b.likes }}<img src="../static/images/likes.jpg"/></button>
+    {% endif %}
+</div>
+<br/>
 {% endfor %}
-</nav>
-
+<br/>
 {% endblock %}

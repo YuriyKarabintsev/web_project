@@ -5,3 +5,10 @@ header {
 a {
     text-decoration: none;
 }
+
+#main_title {
+    color: #096dab;
+    padding: 15px;
+    font-style: italic;
+    text-shadow: -2px 2px 2px #333333;
+}

@@ -20,3 +20,4 @@ class Blogs(SqlAlchemyBase):
     likes = sqlalchemy.Column(sqlalchemy.Integer)
     users_liked = sqlalchemy.Column(sqlalchemy.String)
     user = orm.relationship('User')
+    img_name = sqlalchemy.Column(sqlalchemy.String)

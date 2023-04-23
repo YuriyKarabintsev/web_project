@@ -19,3 +19,11 @@ class UsersResource(Resource):
         users = session.query(User).get(user_id)
         return jsonify({'user': users.to_dict(
             only=("id", "surname", "name", "specialization", "email", "hashed_password", "modified_date"))})
+
+    def delete(self, news_id):
+        abort_if_news_not_found(news_id)
+        session = db_session.create_session()
+        news = session.query(News).get(news_id)
+        session.delete(news)
+        session.commit()
+        return jsonify({'success': 'OK'})

@@ -1,7 +1,5 @@
-import flask
-import flask_login
 from flask import Flask
-from flask import render_template, request, jsonify, flash, url_for
+from flask import render_template, request
 from loginform import LoginForm
 import os
 from userform import UserForm
@@ -30,11 +28,6 @@ login_manager.init_app(app)
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
-def allowed_file(filename):
-    """ Функция проверки расширения файла """
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
@@ -48,7 +41,7 @@ def index():
 
 
 @app.route("/registration", methods=["GET","POST"])
-def register():
+def register(): # регистрация
     form = UserForm()
     if request.method == "POST":
         db_sess = db_session.create_session()
@@ -68,7 +61,7 @@ def register():
 
 
 @app.route('/login', methods=['GET', 'POST'])
-def login():
+def login(): # вход в аккаунт
     registration = False
     form = LoginForm()
     if form.validate_on_submit():
@@ -84,39 +77,54 @@ def login():
 
 @app.route('/logout')
 @login_required
-def logout():
+def logout(): # выход из аккаунта
     logout_user()
     return redirect("/")
 
-@app.route('/per_acc', methods=['GET'])
-def per_acc():
+@app.route('/per_acc/<int:iden>', methods=['GET'])
+def per_acc(iden): # отображение профиля какого-либо пользователя
     db_sess = db_session.create_session()
-    blogs = db_sess.query(Blogs).filter(Blogs.user_id == current_user.id)
-    print(blogs, "ALL BLOGS")
-    return render_template('per_acc.html', title="Личный кабинет", blogs=blogs)
+    blogs = db_sess.query(Blogs).filter(Blogs.user_id == iden)
+    return render_template('per_acc.html', title="Личный кабинет", blogs=blogs, iden=iden)
+
 
 @app.route('/add_blog',  methods=['GET', 'POST'])
 @login_required
-def add_blogs():
+def add_blogs(): # добавление блога
     form = BlogsForm()
-    if form.validate_on_submit():
+    if request.method == "POST":
         db_sess = db_session.create_session()
         blog = Blogs()
         blog.title = form.title.data
         blog.content = form.content.data
-        blog.user_id = form.user_id.data
+        blog.user_id = current_user.id
         blog.type = form.type.data
         blog.likes = 0
         current_user.blogs.append(blog)
         db_sess.merge(current_user)
         db_sess.commit()
-        return redirect('/per_acc')
+        b = db_sess.query(Blogs).filter(Blogs.user_id == current_user.id)
+        b = sorted(b, key=lambda x: x.id)
+        b = [i.id for i in b]
+        id_needed = max(b)
+        if request.files:
+            f = request.files['file']
+            exp = f.filename.split(".")[-1]
+            if os.path.exists("users_images/" + str(current_user.id)):
+                f.save("users_images/" + str(current_user.id) + "/" + str(id_needed) + "." + exp)
+            else:
+                os.mkdir("users_images/" + str(current_user.id))
+                f.save("users_images/" + str(current_user.id) + "/" + str(id_needed) + "." + exp)
+            blog_needed = db_sess.get(Blogs, id_needed)
+            blog_needed.img_name = str(id_needed) + '.' + exp
+            db_sess.commit()
+            return redirect("/per_acc/" + str(current_user.id))
     return render_template('add_blog.html', title='Добавление блога',
                            form=form)
 
 @app.route('/correct/<int:id>',  methods=['GET', 'POST'])
 @login_required
-def correct(id):
+def correct(id): # редактирование блога
     form = BlogsForm()
     if request.method == "GET":
         db_sess = db_session.create_session()
@@ -130,101 +138,56 @@ def correct(id):
             form.type.data = blogs.type
         else:
             abort(404)
-    print(form.validate_on_submit(), "состояние формы")
-    if request.method == "POST":#form.validate_on_submit():
-        print("ОТПРАВЛЕНО")
+    if request.method == "POST":
         db_sess = db_session.create_session()
         blogs = db_sess.query(Blogs).filter(Blogs.id == id,
                                           Blogs.user == current_user
                                           ).first()
         if blogs:
-            print("РЕДАКТИРОВАНИЕ")
             blogs.title = form.title.data
             blogs.content = form.content.data
             db_sess.commit()
             return redirect('/')
         else:
             abort(404)
-    print("HERE IS THE END")
     return render_template('correct.html', title='Редактирование блога',
                            form=form)
 
 @app.route('/blogs_delete/<int:id>', methods=['GET', 'POST'])
 @login_required
-def blogs_delete(id):
+def blogs_delete(id): # удаление блога
     db_sess = db_session.create_session()
     blogs = db_sess.query(Blogs).filter(Blogs.id == id,
                                       Blogs.user == current_user
                                       ).first()
     if blogs:
+        if blogs.img_name:
+            os.remove(f"users_images/{current_user.id}/{blogs.img_name}")
         db_sess.delete(blogs)
         db_sess.commit()
     else:
         abort(404)
-    return redirect('/per_acc')
+    return redirect("/per_acc/" + str(current_user.id))
 
 @app.route("/plus_like/<int:id>", methods=["GET", "POST"])
 @login_required
-def plus_like(id):
+def plus_like(id): # функция обработки лайков
     db_sess = db_session.create_session()
-    print(id, "ID OF BLOG")
     blogs = db_sess.query(Blogs).filter(Blogs.id == id).first()
     l = blogs.users_liked
-    print(current_user.id, blogs.user_id, "users like", l)
     if l == None:
         l = ""
     if current_user.id != blogs.user_id and str(current_user.id) not in l:
-        print("PLUS LIKES")
         if not l:
             l = str(current_user.id) + ","
             blogs.users_liked = l
             db_sess.commit()
-        print(l, "THEY LIKE!")
         blogs.likes += 1
         db_sess.commit()
     return redirect("/")
 
-@app.route('/photo', methods=['GET', 'POST'])
-def upload_file():
-    if request.method == 'POST':
-        # проверим, передается ли в запросе файл
-        if 'file' not in request.files:
-            # После перенаправления на страницу загрузки
-            # покажем сообщение пользователю
-            flash('Не могу прочитать файл')
-            return redirect(request.url)
-        file = request.files['file']
-        # Если файл не выбран, то браузер может
-        # отправить пустой файл без имени.
-        if file.filename == '':
-            flash('Нет выбранного файла')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            # безопасно извлекаем оригинальное имя файла
-            filename = secure_filename(file.filename)
-            # сохраняем файл
-            print(file, filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            # если все прошло успешно, то перенаправляем
-            # на функцию-представление `download_file`
-            # для скачивания файла
-            return redirect(url_for('download_file', name=filename))
-    return '''
-    <!doctype html>
-    <title>Загрузить новый файл</title>
-    <h1>Загрузить новый файл</h1>
-    <form method=post enctype=multipart/form-data>
-      <input type=file name=file>
-      <input type=submit value=Upload>
-    </form>
-    </html>
-    '''
-
 
 if __name__ == "__main__":
-    db_session.global_init("db/data.db")
+    db_session.global_init("db/data_of_site.db")
     db_sess = db_session.create_session()
-    for blog in db_sess.query(Blogs):
-        print(blog.id, blog.content, blog.type, blog.likes)
-
     app.run()

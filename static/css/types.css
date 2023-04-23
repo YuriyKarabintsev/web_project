@@ -1,9 +1,13 @@
-.project {
+.Project {
     background-color: #f0cdb1;
     box-shadow: -4px 4px 4px #666666;
-    position: static;
 }
-.note {
+.Note {
     background-color: #f7e8dc;
-    position: static;
+}
+.Question {
+    background-color: #fc6f6f;
+}
+.Vacancy {
+    background-color: #84c3be;
 }
