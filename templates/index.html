@@ -32,7 +32,8 @@
         <button class="btn btn-warning"><a href="/blogs_delete/{{ b.id }}">Удалить</a></button>
         <button>{{ b.likes }}<img src="../static/images/likes.jpg"/></button>
     {% else %}
-       <p>{{b.likes }}<img src="../static/images/likes.jpg"/></p>
+    <button action="/plus_like/{{ b.id }}">
+        <a href="/plus_like/{{ b.id }}">{{ b.likes }}</a><img src="../static/images/likes.jpg"/></button>
     {% endif %}
 </div>
 <br/>

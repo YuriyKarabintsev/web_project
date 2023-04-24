@@ -22,15 +22,6 @@
         {% endfor %}
     </p>
     <p>
-        {{ form.user_id.label }}<br>
-        {{ form.user_id(class="form-control") }}<br>
-        {% for error in form.user_id.errors %}
-            <p class="alert alert-danger" role="alert">
-                {{ error }}
-            </p>
-        {% endfor %}
-    </p>
-    <p>
         {{ form.type.label }}<br>
         {{ form.type(class="form-control") }}<br>
         {% for error in form.type.errors %}
@@ -39,6 +30,7 @@
             </p>
         {% endfor %}
     </p>
+    <input type="file" name="file" />
     <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
     {{message}}
 </form>

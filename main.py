@@ -37,6 +37,7 @@ def load_user(user_id):
 def index():
     db_sess = db_session.create_session()
     blogs = db_sess.query(Blogs).all()
+    blogs = sorted(blogs, key=lambda b: b.likes, reverse=True)
     return render_template("index.html", title="Main page", blogs=blogs)
 
 
@@ -46,7 +47,6 @@ def register(): # регистрация
     if request.method == "POST":
         db_sess = db_session.create_session()
         user = User(
-            id=form.id.data,
             surname=form.surname.data,
             name=form.name.data,
             specialization=form.specialization.data,
@@ -150,6 +150,22 @@ def correct(id): # редактирование блога
             return redirect('/')
         else:
             abort(404)
+        b = db_sess.query(Blogs).filter(Blogs.user_id == current_user.id)
+        b = sorted(b, key=lambda x: x.id)
+        b = [i.id for i in b]
+        id_needed = max(b)
+        if request.files:
+            f = request.files['file']
+            exp = f.filename.split(".")[-1]
+            if os.path.exists("users_images/" + str(current_user.id)):
+                f.save("users_images/" + str(current_user.id) + "/" + str(id_needed) + "." + exp)
+            else:
+                os.mkdir("users_images/" + str(current_user.id))
+                f.save("users_images/" + str(current_user.id) + "/" + str(id_needed) + "." + exp)
+            blog_needed = db_sess.get(Blogs, id_needed)
+            blog_needed.img_name = str(id_needed) + '.' + exp
+            db_sess.commit()
+            return redirect("/per_acc/" + str(current_user.id))
     return render_template('correct.html', title='Редактирование блога',
                            form=form)
 
