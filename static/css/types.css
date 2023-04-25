@@ -1,13 +1,43 @@
 .Project {
     background-color: #f0cdb1;
     box-shadow: -4px 4px 4px #666666;
+    border-radius: 10px;
+    box-shadow: -5px 5px 5px 0px rgba(250, 150, 100, 50);
 }
 .Note {
     background-color: #f7e8dc;
+    border-radius: 10px;
+    box-shadow: -5px 5px 5px 0px rgba(150, 150, 100, 50);
 }
 .Question {
     background-color: #fc6f6f;
+    border-radius: 10px;
+    box-shadow: -5px 5px 5px 0px rgba(250, 50, 50, 50);
 }
 .Vacancy {
     background-color: #84c3be;
+    border-radius: 10px;
+    box-shadow: -5px 5px 5px 0px rgba(100, 250, 150, 50);
+}
+h2 {
+    float: left;
+    padding: 10px;
+    padding-bottom: 0px;
+}
+img {
+    padding-top: 10px;
+}
+div {
+    padding-left: 20px;
+}
+#inf {
+    background-color: #b8b8b8;
+    padding-left: 0px;
+}
+a {
+    color: black;
+}
+a:hover {
+    color: black;
+    text-shadow: -3px 3px 3px black;
 }

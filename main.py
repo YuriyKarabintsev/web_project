@@ -38,7 +38,7 @@ def index():
     db_sess = db_session.create_session()
     blogs = db_sess.query(Blogs).all()
     blogs = sorted(blogs, key=lambda b: b.likes, reverse=True)
-    return render_template("index.html", title="Main page", blogs=blogs)
+    return render_template("index.html", title="Main page", blogs=blogs, iden=current_user.id)
 
 
 @app.route("/registration", methods=["GET","POST"])
@@ -111,12 +111,12 @@ def add_blogs(): # добавление блога
             f = request.files['file']
             exp = f.filename.split(".")[-1]
             if os.path.exists("users_images/" + str(current_user.id)):
-                f.save("users_images/" + str(current_user.id) + "/" + str(id_needed) + "." + exp)
+                f.save("users_images/" + str(current_user.id) + "/" + str(id_needed) + ".png")# + exp)
             else:
                 os.mkdir("users_images/" + str(current_user.id))
-                f.save("users_images/" + str(current_user.id) + "/" + str(id_needed) + "." + exp)
+                f.save("users_images/" + str(current_user.id) + "/" + str(id_needed) + ".png")# + exp)
             blog_needed = db_sess.get(Blogs, id_needed)
-            blog_needed.img_name = str(id_needed) + '.' + exp
+            blog_needed.img_name = str(id_needed) + '.png' #+ exp
             db_sess.commit()
             return redirect("/per_acc/" + str(current_user.id))
     return render_template('add_blog.html', title='Добавление блога',
@@ -146,6 +146,7 @@ def correct(id): # редактирование блога
         if blogs:
             blogs.title = form.title.data
             blogs.content = form.content.data
+            blogs.type = form.type.data
             db_sess.commit()
             return redirect('/')
         else:
@@ -163,7 +164,7 @@ def correct(id): # редактирование блога
                 os.mkdir("users_images/" + str(current_user.id))
                 f.save("users_images/" + str(current_user.id) + "/" + str(id_needed) + "." + exp)
             blog_needed = db_sess.get(Blogs, id_needed)
-            blog_needed.img_name = str(id_needed) + '.' + exp
+            blog_needed.img_name = str(id_needed) + '.png' #+ exp
             db_sess.commit()
             return redirect("/per_acc/" + str(current_user.id))
     return render_template('correct.html', title='Редактирование блога',
@@ -177,7 +178,7 @@ def blogs_delete(id): # удаление блога
                                       Blogs.user == current_user
                                       ).first()
     if blogs:
-        if blogs.img_name:
+        if blogs.img_name and os.path.exists(f"users_images/{current_user.id}/{blogs.img_name}"):
             os.remove(f"users_images/{current_user.id}/{blogs.img_name}")
         db_sess.delete(blogs)
         db_sess.commit()
